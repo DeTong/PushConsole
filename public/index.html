@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>iOS 推送测试后台</title>
+  <title>推送测试后台 (iOS & Android)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
@@ -326,16 +326,64 @@
       font-size: 0.85rem;
       color: var(--text-muted);
     }
+
+    .platform-tabs {
+      display: flex;
+      gap: 0.25rem;
+      margin-bottom: 1.5rem;
+      padding: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      width: fit-content;
+    }
+
+    .platform-tab {
+      padding: 0.5rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .platform-tab:hover {
+      color: var(--text);
+    }
+
+    .platform-tab.active {
+      color: var(--text);
+      background: var(--bg);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>iOS 推送测试后台</h1>
-      <p class="subtitle">配置 APNs 证书并发送测试推送通知</p>
+      <h1>推送测试后台</h1>
+      <p class="subtitle">配置 APNs / FCM / 华为 Push Kit，向 iOS、Android 或华为设备发送测试推送</p>
     </header>
 
+    <div class="platform-tabs" role="tablist">
+      <button type="button" class="platform-tab active" data-platform="ios" role="tab" aria-selected="true">iOS (APNs)</button>
+      <button type="button" class="platform-tab" data-platform="android" role="tab" aria-selected="false">Android (FCM)</button>
+      <button type="button" class="platform-tab" data-platform="huawei" role="tab" aria-selected="false">华为 (Push Kit)</button>
+    </div>
+
     <form id="pushForm">
+      <div id="panel-ios" class="panel active">
       <div class="cards-row">
         <div class="card">
           <div class="card-title">APNs 凭证配置 (P12 证书)</div>
@@ -400,6 +448,94 @@
         </div>
         </div>
       </div>
+      </div>
+
+      <div id="panel-android" class="panel">
+        <div class="cards-row">
+          <div class="card">
+            <div class="card-title">FCM 凭证配置</div>
+            <div class="form-group">
+              <label for="serviceAccountFile">服务账号 JSON 文件</label>
+              <div class="file-input-wrap">
+                <input type="file" id="serviceAccountFile" name="serviceAccountFile" accept=".json">
+                <span class="file-name" id="serviceAccountFileName">未选择文件</span>
+              </div>
+              <p class="help">从 Firebase 控制台 → 项目设置 → 服务账号 → 生成新的私钥，下载的 .json 文件</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">设备与消息</div>
+            <div class="form-group">
+              <label for="fcmToken">设备令牌 (FCM Registration Token)</label>
+              <div class="token-input-wrap">
+                <input type="text" id="fcmToken" name="fcmToken" placeholder="Android 应用获取的 FCM 令牌" autocomplete="off">
+                <div class="token-dropdown" id="fcmTokenDropdown"></div>
+              </div>
+              <p class="help">Android 应用通过 Firebase Messaging 获取的 token，点击可查看最近使用的</p>
+            </div>
+            <div class="form-group">
+              <label for="androidTitle">标题</label>
+              <input type="text" id="androidTitle" name="androidTitle" placeholder="测试推送" value="测试推送">
+            </div>
+            <div class="form-group">
+              <label for="androidBody">消息内容</label>
+              <textarea id="androidBody" name="androidBody" placeholder="这是一条测试消息">这是一条测试消息</textarea>
+            </div>
+            <div class="form-group">
+              <label for="androidCustomData">自定义数据 (JSON)</label>
+              <textarea id="androidCustomData" name="androidCustomData" placeholder='{"key": "value"}'></textarea>
+              <p class="help">可选，键值对将放入 data payload（值会转为字符串）</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-huawei" class="panel">
+        <div class="cards-row">
+          <div class="card">
+            <div class="card-title">华为 Push Kit 凭证</div>
+            <div class="form-group">
+              <label for="huaweiClientId">Client ID（应用 ID）</label>
+              <input type="text" id="huaweiClientId" name="huaweiClientId" placeholder="从 AppGallery Connect 项目设置获取" autocomplete="off">
+              <p class="help">AppGallery Connect → 项目设置 → 应用 → 应用 ID</p>
+            </div>
+            <div class="form-group">
+              <label for="huaweiClientSecret">Client Secret（应用密钥）</label>
+              <input type="password" id="huaweiClientSecret" name="huaweiClientSecret" placeholder="应用密钥" autocomplete="off">
+              <p class="help">同上，在应用 ID 附近可找到应用密钥（App secret）</p>
+            </div>
+            <div class="form-group">
+              <label for="huaweiAppId">Application ID（选填）</label>
+              <input type="text" id="huaweiAppId" name="huaweiAppId" placeholder="不填则使用 Client ID" autocomplete="off">
+              <p class="help">发送接口用，一般与 Client ID 相同，可不填</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">设备与消息</div>
+            <div class="form-group">
+              <label for="huaweiToken">设备令牌 (Push Kit Token)</label>
+              <div class="token-input-wrap">
+                <input type="text" id="huaweiToken" name="huaweiToken" placeholder="华为应用获取的 Push Token" autocomplete="off">
+                <div class="token-dropdown" id="huaweiTokenDropdown"></div>
+              </div>
+              <p class="help">Android 端集成 HMS Push Kit 后通过 onNewToken 获取，点击可查看最近使用的</p>
+            </div>
+            <div class="form-group">
+              <label for="huaweiTitle">标题</label>
+              <input type="text" id="huaweiTitle" name="huaweiTitle" placeholder="测试推送" value="测试推送">
+            </div>
+            <div class="form-group">
+              <label for="huaweiBody">消息内容</label>
+              <textarea id="huaweiBody" name="huaweiBody" placeholder="这是一条测试消息">这是一条测试消息</textarea>
+            </div>
+            <div class="form-group">
+              <label for="huaweiCustomData">自定义数据 (JSON)</label>
+              <textarea id="huaweiCustomData" name="huaweiCustomData" placeholder='{"key": "value"}'></textarea>
+              <p class="help">可选，键值对将放入 data 字段（值会转为字符串）</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
         发送推送
@@ -419,10 +555,32 @@
     const tokenDropdown = document.getElementById('tokenDropdown');
     const bundleIdInput = document.getElementById('bundleId');
     const bundleIdDropdown = document.getElementById('bundleIdDropdown');
+    const serviceAccountFileInput = document.getElementById('serviceAccountFile');
+    const serviceAccountFileName = document.getElementById('serviceAccountFileName');
+    const fcmTokenInput = document.getElementById('fcmToken');
+    const fcmTokenDropdown = document.getElementById('fcmTokenDropdown');
+    const huaweiTokenInput = document.getElementById('huaweiToken');
+    const huaweiTokenDropdown = document.getElementById('huaweiTokenDropdown');
 
     const STORAGE_KEY = 'recentDeviceTokens';
     const BUNDLE_STORAGE_KEY = 'recentBundleIds';
+    const FCM_STORAGE_KEY = 'recentFcmTokens';
+    const HUAWEI_STORAGE_KEY = 'recentHuaweiTokens';
     const MAX_RECENT = 10;
+
+    let currentPlatform = 'ios';
+
+    // 平台切换
+    document.querySelectorAll('.platform-tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const platform = tab.dataset.platform;
+        currentPlatform = platform;
+        document.querySelectorAll('.platform-tab').forEach((t) => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('panel-' + platform).classList.add('active');
+      });
+    });
 
     function getRecentTokens() {
       try {
@@ -468,13 +626,6 @@
         const idx = parseInt(item.dataset.index, 10);
         if (list[idx]) deviceTokenInput.value = list[idx];
         tokenDropdown.classList.remove('show');
-      }
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.token-input-wrap')) {
-        tokenDropdown.classList.remove('show');
-        bundleIdDropdown.classList.remove('show');
       }
     });
 
@@ -525,6 +676,115 @@
       }
     });
 
+    function getRecentFcmTokens() {
+      try {
+        const raw = localStorage.getItem(FCM_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveRecentFcmToken(token) {
+      const normalized = (token || '').trim().replace(/\s/g, '');
+      if (!normalized) return;
+      let list = getRecentFcmTokens().filter((t) => t !== normalized);
+      list.unshift(normalized);
+      list = list.slice(0, MAX_RECENT);
+      localStorage.setItem(FCM_STORAGE_KEY, JSON.stringify(list));
+    }
+
+    function renderFcmTokenDropdown() {
+      const list = getRecentFcmTokens();
+      if (list.length === 0) {
+        fcmTokenDropdown.innerHTML = '<div class="token-dropdown-empty">暂无历史记录，发送成功后会自动保存</div>';
+      } else {
+        fcmTokenDropdown.innerHTML = list.map((t, i) => `<div class="token-dropdown-item" data-index="${i}">${t}</div>`).join('');
+      }
+    }
+
+    fcmTokenInput.addEventListener('focus', () => {
+      renderFcmTokenDropdown();
+      fcmTokenDropdown.classList.add('show');
+    });
+    fcmTokenInput.addEventListener('click', () => {
+      renderFcmTokenDropdown();
+      fcmTokenDropdown.classList.add('show');
+    });
+    fcmTokenDropdown.addEventListener('click', (e) => {
+      const item = e.target.closest('.token-dropdown-item');
+      if (item) {
+        const list = getRecentFcmTokens();
+        const idx = parseInt(item.dataset.index, 10);
+        if (list[idx]) fcmTokenInput.value = list[idx];
+        fcmTokenDropdown.classList.remove('show');
+      }
+    });
+
+    function getRecentHuaweiTokens() {
+      try {
+        const raw = localStorage.getItem(HUAWEI_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveRecentHuaweiToken(token) {
+      const normalized = (token || '').trim().replace(/\s/g, '');
+      if (!normalized) return;
+      let list = getRecentHuaweiTokens().filter((t) => t !== normalized);
+      list.unshift(normalized);
+      list = list.slice(0, MAX_RECENT);
+      localStorage.setItem(HUAWEI_STORAGE_KEY, JSON.stringify(list));
+    }
+
+    function renderHuaweiTokenDropdown() {
+      const list = getRecentHuaweiTokens();
+      if (list.length === 0) {
+        huaweiTokenDropdown.innerHTML = '<div class="token-dropdown-empty">暂无历史记录，发送成功后会自动保存</div>';
+      } else {
+        huaweiTokenDropdown.innerHTML = list.map((t, i) => `<div class="token-dropdown-item" data-index="${i}">${t}</div>`).join('');
+      }
+    }
+
+    huaweiTokenInput.addEventListener('focus', () => {
+      renderHuaweiTokenDropdown();
+      huaweiTokenDropdown.classList.add('show');
+    });
+    huaweiTokenInput.addEventListener('click', () => {
+      renderHuaweiTokenDropdown();
+      huaweiTokenDropdown.classList.add('show');
+    });
+    huaweiTokenDropdown.addEventListener('click', (e) => {
+      const item = e.target.closest('.token-dropdown-item');
+      if (item) {
+        const list = getRecentHuaweiTokens();
+        const idx = parseInt(item.dataset.index, 10);
+        if (list[idx]) huaweiTokenInput.value = list[idx];
+        huaweiTokenDropdown.classList.remove('show');
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.token-input-wrap')) {
+        tokenDropdown.classList.remove('show');
+        bundleIdDropdown.classList.remove('show');
+        fcmTokenDropdown.classList.remove('show');
+        huaweiTokenDropdown.classList.remove('show');
+      }
+    });
+
+    serviceAccountFileInput.addEventListener('change', () => {
+      if (serviceAccountFileInput.files.length > 0) {
+        serviceAccountFileName.textContent = serviceAccountFileInput.files[0].name;
+        serviceAccountFileName.classList.add('has-file');
+      } else {
+        serviceAccountFileName.textContent = '未选择文件';
+        serviceAccountFileName.classList.remove('has-file');
+      }
+    });
+
     p12FileInput.addEventListener('change', () => {
       if (p12FileInput.files.length > 0) {
         p12FileName.textContent = p12FileInput.files[0].name;
@@ -555,11 +815,149 @@
       }, 3000);
     }
 
+    function readFileAsText(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsText(file, 'UTF-8');
+      });
+    }
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       submitBtn.disabled = true;
       submitBtn.textContent = '发送中...';
 
+      if (currentPlatform === 'huawei') {
+        const clientId = document.getElementById('huaweiClientId').value.trim();
+        const clientSecret = document.getElementById('huaweiClientSecret').value;
+        const appId = document.getElementById('huaweiAppId').value.trim() || clientId;
+        const huaweiToken = huaweiTokenInput.value.trim().replace(/\s/g, '');
+        if (!clientId || !clientSecret) {
+          showToast('请填写华为 Client ID 和 Client Secret', 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = '发送推送';
+          return;
+        }
+        if (!huaweiToken) {
+          showToast('请输入华为设备令牌 (Push Kit Token)', 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = '发送推送';
+          return;
+        }
+        let huaweiCustomData = null;
+        const huaweiCustomStr = document.getElementById('huaweiCustomData').value.trim();
+        if (huaweiCustomStr) {
+          try {
+            huaweiCustomData = JSON.parse(huaweiCustomStr);
+          } catch {
+            showToast('自定义数据 JSON 格式错误', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = '发送推送';
+            return;
+          }
+        }
+        const payload = {
+          platform: 'huawei',
+          clientId,
+          clientSecret,
+          appId: appId || clientId,
+          deviceToken: huaweiToken,
+          title: document.getElementById('huaweiTitle').value.trim() || '测试推送',
+          body: document.getElementById('huaweiBody').value.trim() || '这是一条测试消息',
+          customData: huaweiCustomData,
+        };
+        try {
+          const res = await fetch('/api/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json();
+          if (data.success) {
+            saveRecentHuaweiToken(huaweiToken);
+            showToast(data.message || '推送发送成功', 'success');
+          } else {
+            showToast(data.error || '推送失败', 'error');
+          }
+        } catch (err) {
+          showToast(err.message || '网络错误，请检查服务是否运行', 'error');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '发送推送';
+        }
+        return;
+      }
+
+      if (currentPlatform === 'android') {
+        const file = serviceAccountFileInput.files[0];
+        if (!file) {
+          showToast('请选择 FCM 服务账号 JSON 文件', 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = '发送推送';
+          return;
+        }
+        const fcmToken = fcmTokenInput.value.trim().replace(/\s/g, '');
+        if (!fcmToken) {
+          showToast('请输入 Android 设备令牌 (FCM Token)', 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = '发送推送';
+          return;
+        }
+        let androidCustomData = null;
+        const androidCustomStr = document.getElementById('androidCustomData').value.trim();
+        if (androidCustomStr) {
+          try {
+            androidCustomData = JSON.parse(androidCustomStr);
+          } catch {
+            showToast('自定义数据 JSON 格式错误', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = '发送推送';
+            return;
+          }
+        }
+        let serviceAccountJson;
+        try {
+          serviceAccountJson = await readFileAsText(file);
+          JSON.parse(serviceAccountJson);
+        } catch (err) {
+          showToast('服务账号 JSON 文件无效或格式错误', 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = '发送推送';
+          return;
+        }
+        const payload = {
+          platform: 'android',
+          serviceAccountJson,
+          deviceToken: fcmToken,
+          title: document.getElementById('androidTitle').value.trim() || '测试推送',
+          body: document.getElementById('androidBody').value.trim() || '这是一条测试消息',
+          customData: androidCustomData,
+        };
+        try {
+          const res = await fetch('/api/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json();
+          if (data.success) {
+            saveRecentFcmToken(fcmToken);
+            showToast(data.message || '推送发送成功', 'success');
+          } else {
+            showToast(data.error || '推送失败', 'error');
+          }
+        } catch (err) {
+          showToast(err.message || '网络错误，请检查服务是否运行', 'error');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '发送推送';
+        }
+        return;
+      }
+
+      // iOS
       const file = p12FileInput.files[0];
       if (!file) {
         showToast('请选择 P12 证书文件', 'error');
@@ -592,6 +990,7 @@
       }
 
       const payload = {
+        platform: 'ios',
         p12Data: p12Base64,
         passphrase: document.getElementById('passphrase').value,
         bundleId: document.getElementById('bundleId').value.trim(),
