@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iOS 推送测试后台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f12;
+      --surface: #18181c;
+      --surface-hover: #1f1f24;
+      --border: #2a2a32;
+      --text: #e8e8ed;
+      --text-muted: #8888a0;
+      --accent: #0a84ff;
+      --accent-hover: #409cff;
+      --success: #30d158;
+      --error: #ff453a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    .cards-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 768px) {
+      .cards-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    header {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    h1::before {
+      content: '';
+      display: block;
+      width: 8px;
+      height: 24px;
+      background: linear-gradient(180deg, var(--accent), #5e5ce6);
+      border-radius: 4px;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .cards-row .card {
+      margin-bottom: 0;
+    }
+
+    .card-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.35rem;
+      color: var(--text-muted);
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: var(--text-muted);
+      opacity: 0.7;
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: auto;
+    }
+
+    .file-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+    }
+
+    .file-input-wrap input[type="file"] {
+      padding: 0.4rem 0.6rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      width: auto;
+    }
+
+    .file-input-wrap input[type="file"]::file-selector-button {
+      padding: 0.4rem 0.8rem;
+      margin-right: 0.75rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .file-name {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .file-name.has-file {
+      color: var(--success);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 500;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-block {
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+      z-index: 100;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      background: var(--success);
+      color: #000;
+    }
+
+    .toast.error {
+      background: var(--error);
+      color: #fff;
+    }
+
+    .help {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .help a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .help a:hover {
+      text-decoration: underline;
+    }
+
+    .token-input-wrap {
+      position: relative;
+    }
+
+    .token-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      max-height: 240px;
+      overflow-y: auto;
+      z-index: 50;
+      display: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    .token-dropdown.show {
+      display: block;
+    }
+
+    .token-dropdown-item {
+      padding: 0.6rem 0.85rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text);
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .token-dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .token-dropdown-item:hover {
+      background: var(--surface-hover);
+    }
+
+    .token-dropdown-empty {
+      padding: 0.75rem 0.85rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>iOS 推送测试后台</h1>
+      <p class="subtitle">配置 APNs 证书并发送测试推送通知</p>
+    </header>
+
+    <form id="pushForm">
+      <div class="cards-row">
+        <div class="card">
+          <div class="card-title">APNs 凭证配置 (P12 证书)</div>
+        <div class="form-group">
+          <label for="p12File">P12 证书文件</label>
+          <div class="file-input-wrap">
+            <input type="file" id="p12File" name="p12File" accept=".p12,.pfx" required>
+            <span class="file-name" id="p12FileName">未选择文件</span>
+          </div>
+          <p class="help">点击选择从钥匙串导出的 .p12 证书</p>
+        </div>
+        <div class="form-group">
+          <label for="passphrase">P12 导出密码</label>
+          <input type="password" id="passphrase" name="passphrase" placeholder="导出时设置的密码，无密码留空">
+          <p class="help">导出 P12 时设置的密码，若未设置可留空</p>
+        </div>
+        <div class="form-group">
+          <label for="bundleId">Bundle ID</label>
+          <div class="token-input-wrap">
+            <input type="text" id="bundleId" name="bundleId" placeholder="com.example.app" required autocomplete="off">
+            <div class="token-dropdown" id="bundleIdDropdown"></div>
+          </div>
+          <p class="help">需与 P12 证书对应的 App 一致，点击可查看最近使用的 ID</p>
+        </div>
+        <div class="form-group">
+          <div class="checkbox-row">
+            <input type="checkbox" id="production" name="production">
+            <label for="production" style="margin-bottom:0">生产环境 (Production)</label>
+          </div>
+          <p class="help">不勾选则使用沙盒环境 (Sandbox)，开发/调试时使用</p>
+        </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">设备与消息</div>
+        <div class="form-group">
+          <label for="deviceToken">设备令牌 (Device Token)</label>
+          <div class="token-input-wrap">
+            <input type="text" id="deviceToken" name="deviceToken" placeholder="64 位十六进制字符串" required autocomplete="off">
+            <div class="token-dropdown" id="tokenDropdown"></div>
+          </div>
+          <p class="help">iOS 应用获取的 APNs 设备令牌，点击可查看最近使用的 ID</p>
+        </div>
+        <div class="row">
+          <div class="form-group">
+            <label for="title">标题</label>
+            <input type="text" id="title" name="title" placeholder="测试推送" value="测试推送">
+          </div>
+          <div class="form-group">
+            <label for="badge">角标 (Badge)</label>
+            <input type="number" id="badge" name="badge" placeholder="可选" min="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="body">消息内容</label>
+          <textarea id="body" name="body" placeholder="这是一条测试消息">这是一条测试消息</textarea>
+        </div>
+        <div class="form-group">
+          <label for="customData">自定义数据 (JSON)</label>
+          <textarea id="customData" name="customData" placeholder='{"key": "value"}'></textarea>
+          <p class="help">可选，键值对将放入 notification.payload</p>
+        </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
+        发送推送
+      </button>
+    </form>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <script>
+    const form = document.getElementById('pushForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const toast = document.getElementById('toast');
+    const p12FileInput = document.getElementById('p12File');
+    const p12FileName = document.getElementById('p12FileName');
+    const deviceTokenInput = document.getElementById('deviceToken');
+    const tokenDropdown = document.getElementById('tokenDropdown');
+    const bundleIdInput = document.getElementById('bundleId');
+    const bundleIdDropdown = document.getElementById('bundleIdDropdown');
+
+    const STORAGE_KEY = 'recentDeviceTokens';
+    const BUNDLE_STORAGE_KEY = 'recentBundleIds';
+    const MAX_RECENT = 10;
+
+    function getRecentTokens() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveRecentToken(token) {
+      const normalized = token.replace(/\s/g, '');
+      if (!normalized) return;
+      let list = getRecentTokens().filter(t => t !== normalized);
+      list.unshift(normalized);
+      list = list.slice(0, MAX_RECENT);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+
+    function renderTokenDropdown() {
+      const list = getRecentTokens();
+      if (list.length === 0) {
+        tokenDropdown.innerHTML = '<div class="token-dropdown-empty">暂无历史记录，发送成功后会自动保存</div>';
+      } else {
+        tokenDropdown.innerHTML = list.map((t, i) => `<div class="token-dropdown-item" data-index="${i}">${t}</div>`).join('');
+      }
+    }
+
+    deviceTokenInput.addEventListener('focus', () => {
+      renderTokenDropdown();
+      tokenDropdown.classList.add('show');
+    });
+
+    deviceTokenInput.addEventListener('click', () => {
+      renderTokenDropdown();
+      tokenDropdown.classList.add('show');
+    });
+
+    tokenDropdown.addEventListener('click', (e) => {
+      const item = e.target.closest('.token-dropdown-item');
+      if (item) {
+        const list = getRecentTokens();
+        const idx = parseInt(item.dataset.index, 10);
+        if (list[idx]) deviceTokenInput.value = list[idx];
+        tokenDropdown.classList.remove('show');
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.token-input-wrap')) {
+        tokenDropdown.classList.remove('show');
+        bundleIdDropdown.classList.remove('show');
+      }
+    });
+
+    function getRecentBundleIds() {
+      try {
+        const raw = localStorage.getItem(BUNDLE_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveRecentBundleId(id) {
+      const normalized = (id || '').trim();
+      if (!normalized) return;
+      let list = getRecentBundleIds().filter(b => b !== normalized);
+      list.unshift(normalized);
+      list = list.slice(0, MAX_RECENT);
+      localStorage.setItem(BUNDLE_STORAGE_KEY, JSON.stringify(list));
+    }
+
+    function renderBundleIdDropdown() {
+      const list = getRecentBundleIds();
+      if (list.length === 0) {
+        bundleIdDropdown.innerHTML = '<div class="token-dropdown-empty">暂无历史记录，发送成功后会自动保存</div>';
+      } else {
+        bundleIdDropdown.innerHTML = list.map((b, i) => `<div class="token-dropdown-item" data-index="${i}">${b}</div>`).join('');
+      }
+    }
+
+    bundleIdInput.addEventListener('focus', () => {
+      renderBundleIdDropdown();
+      bundleIdDropdown.classList.add('show');
+    });
+
+    bundleIdInput.addEventListener('click', () => {
+      renderBundleIdDropdown();
+      bundleIdDropdown.classList.add('show');
+    });
+
+    bundleIdDropdown.addEventListener('click', (e) => {
+      const item = e.target.closest('.token-dropdown-item');
+      if (item) {
+        const list = getRecentBundleIds();
+        const idx = parseInt(item.dataset.index, 10);
+        if (list[idx]) bundleIdInput.value = list[idx];
+        bundleIdDropdown.classList.remove('show');
+      }
+    });
+
+    p12FileInput.addEventListener('change', () => {
+      if (p12FileInput.files.length > 0) {
+        p12FileName.textContent = p12FileInput.files[0].name;
+        p12FileName.classList.add('has-file');
+      } else {
+        p12FileName.textContent = '未选择文件';
+        p12FileName.classList.remove('has-file');
+      }
+    });
+
+    function readFileAsBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function showToast(message, type = 'success') {
+      toast.textContent = message;
+      toast.className = 'toast ' + type + ' show';
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.textContent = '发送中...';
+
+      const file = p12FileInput.files[0];
+      if (!file) {
+        showToast('请选择 P12 证书文件', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = '发送推送';
+        return;
+      }
+
+      let customData = null;
+      const customDataStr = document.getElementById('customData').value.trim();
+      if (customDataStr) {
+        try {
+          customData = JSON.parse(customDataStr);
+        } catch {
+          showToast('自定义数据 JSON 格式错误', 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = '发送推送';
+          return;
+        }
+      }
+
+      let p12Base64;
+      try {
+        p12Base64 = await readFileAsBase64(file);
+      } catch (err) {
+        showToast('读取证书文件失败', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = '发送推送';
+        return;
+      }
+
+      const payload = {
+        p12Data: p12Base64,
+        passphrase: document.getElementById('passphrase').value,
+        bundleId: document.getElementById('bundleId').value.trim(),
+        deviceToken: document.getElementById('deviceToken').value.trim().replace(/\s/g, ''),
+        title: document.getElementById('title').value.trim() || '测试推送',
+        body: document.getElementById('body').value.trim() || '这是一条测试消息',
+        production: document.getElementById('production').checked,
+        badge: document.getElementById('badge').value || undefined,
+        customData: customData,
+      };
+
+      try {
+        const res = await fetch('/api/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          saveRecentToken(payload.deviceToken);
+          saveRecentBundleId(payload.bundleId);
+          showToast(data.message || '推送发送成功', 'success');
+        } else {
+          showToast(data.error || '推送失败', 'error');
+        }
+      } catch (err) {
+        showToast(err.message || '网络错误，请检查服务是否运行', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '发送推送';
+      }
+    });
+  </script>
+</body>
+</html>

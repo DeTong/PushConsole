@@ -1,0 +1,5 @@
+node_modules/
+*.p8
+*.p12
+.env
+.DS_Store
